@@ -3,14 +3,17 @@ from bs4 import BeautifulSoup
 import openpyxl as openpyxl
 wb = openpyxl.Workbook()
 sheet = wb.active
+
 with sync_playwright()as p:
     browser = p.chromium.launch(headless=True, slow_mo=50, timeout=0)
     page = browser.new_page()
     print("Opening Browser...")
     print("Redirecting to Partner Portal!")
-    page.goto('')
-    page.fill('input#login__email', '')
-    page.fill('input#login__password', '')
+    uname = input("Username: ")
+    pwd = input("Password: ")
+    page.goto('https://relay.cool/out-task/program-partners')
+    page.fill('input#login__email', uname)
+    page.fill('input#login__password', pwd)
     page.click('button[type=submit]')
     print("Logged In...")
     page.locator("text=My Programs").wait_for(timeout=0)
@@ -25,8 +28,9 @@ with sync_playwright()as p:
     print("Please wait..")
 
     total_href = page.eval_on_selector_all("a[href^='/out-task/program-partners/']","elements => elements.map(element => element.href)")
+    new_hrefs = total_href[2:]
     i=1
-    for s in total_href:
+    for s in new_hrefs:
         page.goto(s)
         page.locator("text=Delivery Schedule").wait_for(timeout=0)
         html = page.inner_html('#app', timeout=0)
@@ -46,4 +50,4 @@ with sync_playwright()as p:
         sheet.cell(row=i+1, column=1).value = (Campaign_ID, Final_status.__str__()).__str__()
         i = i+1
 wb.save('NameFile.xlsx')
-print("File Saved")
+print("File saved")
